@@ -19,37 +19,23 @@ PUBLIC_URL = "https://yashiels.github.io/live-tv"
 IPTV_API = "https://iptv-org.github.io/api"
 DSTV_GUIDE = "https://www.dstv.com/umbraco/api/TvGuide/GetProgrammes?d={day}&country=zaf"
 PLATFORM_GUIDES = {
-    "plu": "https://i.mjh.nz/PlutoTV/all.xml.gz",
     "stvp": "https://i.mjh.nz/SamsungTVPlus/all.xml.gz",
+    "plex": "https://i.mjh.nz/Plex/all.xml.gz",
+    "roku": "https://i.mjh.nz/Roku/all.xml.gz",
 }
 GUIDE_DAYS = 2
 SAST = dt.timezone(dt.timedelta(hours=2))
-TRUSTED_DOMAINS = (
-    "jmp2.uk", "pluto.tv", "amagi.tv", "wurl.tv", "wurl.com", "ottera.tv", "samsungtvplus.com",
-    "sinclairstoryline.com", "freevisiontv.co.za", "getaj.net", "france24.com",
-    "nhkworld.jp", "trace.plus", "trt.com.tr", "bloomberg.com", "yuppcdn.net",
-)
+TRUSTED_DOMAINS = ("amagi.tv", "wurl.tv", "wurl.com")
 TRUSTED_HOSTS = {
     "sabconeta.cdn.mangomolo.com", "sabconetanw.cdn.mangomolo.com",
     "sabctwota.cdn.mangomolo.com", "sabctreta.cdn.mangomolo.com",
     "sabctretalh.cdn.mangomolo.com", "sabcnews.cdn.mangomolo.com",
-    "vs-hls-push-ww-live.akamaized.net", "cdn-euronews.akamaized.net",
-    "skynewsau-live.akamaized.net", "sr-live-weigel1.akamaized.net",
-    "pb-6csswagmy4nat.akamaized.net", "cc-szrmqvu8zkg16.akamaized.net",
-    "cc-4bhi5osabejc9.akamaized.net", "cc-t8lqe1o99pszu.akamaized.net",
-    "cc-yw7ztecy8do3q.akamaized.net", "dqga3jatxofgx.cloudfront.net",
-    "d3bp6dwmpbdajl.cloudfront.net", "dv8lsrd8fecw9.cloudfront.net",
-    "dltiqboxjw21d.cloudfront.net", "dil9xdvretp0f.cloudfront.net",
-    "dl74gpgmnb7i8.cloudfront.net", "dbrb49pjoymg4.cloudfront.net",
-    "d6dg3ebeih71x.cloudfront.net", "dz05z8iljgvbe.cloudfront.net",
-    "d3pxo1qcgzxtxs.cloudfront.net", "dqi7ayt2o24fn.cloudfront.net",
-    "d1qkhu31k9gfli.cloudfront.net", "d3arbp6l7f096k.cloudfront.net",
-    "d1z9okhs5q5o80.cloudfront.net", "d393sxaxig6bax.cloudfront.net",
+    "cc-yw7ztecy8do3q.akamaized.net", "d3arbp6l7f096k.cloudfront.net",
     "d2lk5u59tns74c.cloudfront.net", "d3gnyty2vddhsg.cloudfront.net",
+    "dbrb49pjoymg4.cloudfront.net",
 }
 MIN_CHANNEL_SHARE = 0.85
-MIN_PROGRAMMES = 1000
-PLATFORM_ID = re.compile(r"jmp2\.uk/(plu|stvp)-([A-Za-z0-9]+)")
+MIN_PROGRAMMES = 150
 
 
 def trusted(url):
@@ -117,10 +103,9 @@ def pick_stream(entry, streams):
     return next((s for state, s in results if state == "geo"), None)
 
 
-def tvg_id(entry, stream):
-    platform = PLATFORM_ID.search(stream["url"])
-    if platform:
-        return platform.group(1), platform.group(2)
+def tvg_id(entry):
+    if entry.get("epg"):
+        return tuple(entry["epg"])
     suffix = f"@{entry['feed']}" if entry.get("feed") else ""
     return None, entry["id"] + suffix
 
@@ -135,7 +120,7 @@ def select(config, channels, streams):
         if stream is None:
             missing.append(entry["id"])
             continue
-        platform, channel_id = tvg_id(entry, stream)
+        platform, channel_id = tvg_id(entry)
         selected.append({
             "group": group,
             "name": names.get(entry["id"], entry["id"]),

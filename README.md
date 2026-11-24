@@ -13,6 +13,7 @@ Edit `channels.json`. Each entry is an [iptv-org](https://github.com/iptv-org/ip
 
 - `feed`: pin a specific iptv-org feed
 - `dstv`: DStv channel number, used for the guide
+- `epg`: `[source, id]` guide channel from `stvp` (Samsung TV Plus), `plex` or `roku` on i.mjh.nz
 - `geo`: SA-only stream; kept when the build runner is blocked outside SA
 
 ## Build
@@ -21,6 +22,6 @@ Edit `channels.json`. Each entry is an [iptv-org](https://github.com/iptv-org/ip
 python3 build.py
 ```
 
-Only streams on the trusted host list that return a valid manifest are kept. The build refuses to publish when fewer than 85% of channels resolve or the guide has fewer than 1000 programmes, so a bad upstream day leaves the previous Pages deploy in place.
+Only streams on the trusted host list that return a valid manifest are kept. The build refuses to publish when fewer than 85% of channels resolve or the guide has fewer than 150 programmes, so a bad upstream day leaves the previous Pages deploy in place.
 
 Streams play directly on the device; SABC channels only play from a South African IP.
