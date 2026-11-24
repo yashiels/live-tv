@@ -66,16 +66,17 @@ class TrustedRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 
 OPENER = urllib.request.build_opener(TrustedRedirectHandler)
+OPEN_OPENER = urllib.request.build_opener()
 GEO_DENIAL_CODES = {403, 451}
 
 
-def probe(stream):
+def probe(stream, opener=OPENER):
     headers = {"User-Agent": stream.get("user_agent") or "Mozilla/5.0"}
     if stream.get("referrer"):
         headers["Referer"] = stream["referrer"]
     try:
         request = urllib.request.Request(stream["url"], headers=headers)
-        with OPENER.open(request, timeout=10) as response:
+        with opener.open(request, timeout=10) as response:
             return "ok" if b"#EXTM3U" in response.read(4096) else "down"
     except UntrustedRedirect:
         return "untrusted"
@@ -90,13 +91,14 @@ def candidates(entry, streams):
         s for s in streams
         if s.get("channel") == entry["id"]
         and (not entry.get("feed") or s.get("feed") == entry["feed"])
-        and trusted(s["url"])
+        and (entry.get("open") or trusted(s["url"]))
     ]
     return sorted(matches, key=quality, reverse=True)
 
 
 def pick_stream(entry, streams):
-    results = [(probe(s), s) for s in candidates(entry, streams)]
+    opener = OPEN_OPENER if entry.get("open") else OPENER
+    results = [(probe(s, opener), s) for s in candidates(entry, streams)]
     working = next((s for state, s in results if state == "ok"), None)
     if working or not entry.get("geo"):
         return working
@@ -127,6 +129,7 @@ def select(config, channels, streams):
             "tvg_id": channel_id,
             "platform": platform,
             "dstv": entry.get("dstv"),
+            "open": entry.get("open", False),
             "stream": stream,
         })
     return selected, missing
@@ -214,8 +217,9 @@ def main():
     print(f"{len(selected)} channels, {programme_count} programmes")
     if missing:
         print("no trusted stream: " + ", ".join(missing), file=sys.stderr)
-    expected = sum(len(entries) for entries in config.values())
-    if len(selected) < expected * MIN_CHANNEL_SHARE or programme_count < MIN_PROGRAMMES:
+    expected = sum(1 for entries in config.values() for entry in entries if not entry.get("open"))
+    stable = sum(1 for item in selected if not item["open"])
+    if stable < expected * MIN_CHANNEL_SHARE or programme_count < MIN_PROGRAMMES:
         sys.exit(f"refusing to publish: {len(selected)}/{expected} channels, {programme_count} programmes")
     SITE.mkdir(exist_ok=True)
     (SITE / "playlist.m3u").write_text(playlist(selected))

@@ -5,6 +5,11 @@
     {"id": "SABC3.za", "dstv": "193", "geo": true},
     {"id": "SABCNews.za", "dstv": "404", "geo": true}
   ],
+  "Kids": [
+    {"id": "DisneyChannel.us", "open": true},
+    {"id": "DisneyJunior.us", "open": true},
+    {"id": "DisneyXD.us", "open": true}
+  ],
   "Indian": [
     {"id": "AndTV.in", "epg": ["stvp", "GB800002OP"]},
     {"id": "B4UMovies.in", "epg": ["stvp", "IN3900016WI"]},

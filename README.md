@@ -15,6 +15,7 @@ Edit `channels.json`. Each entry is an [iptv-org](https://github.com/iptv-org/ip
 - `dstv`: DStv channel number, used for the guide
 - `epg`: `[source, id]` guide channel from `stvp` (Samsung TV Plus), `plex` or `roku` on i.mjh.nz
 - `geo`: SA-only stream; kept when the build runner is blocked outside SA
+- `open`: accept any iptv-org host for this channel and skip it in the publish floor
 
 ## Build
 
